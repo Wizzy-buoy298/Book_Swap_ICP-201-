@@ -14,23 +14,19 @@ This is a decentralized Book Swap Platform built using Azle and the DFINITY Inte
 ## Screenshots
 
 ### Home Landing
-(![image](https://github.com/user-attachments/assets/316c5b8e-db5b-4cfc-b6eb-a02b3b4de7ef)
+![image](https://github.com/user-attachments/assets/316c5b8e-db5b-4cfc-b6eb-a02b3b4de7ef)
 
 ### User Dashboard
-(https://github.com/user-attachments/assets/7b09a347-6fd8-4863-a00a-bc8470499961)
+![image](https://github.com/user-attachments/assets/7b09a347-6fd8-4863-a00a-bc8470499961)
 
 ### Book Listing
-![Book Listing](![image](https://github.com/user-attachments/assets/7e12b296-9405-4adf-8cb7-e4325e8db986)
-)
+![image](https://github.com/user-attachments/assets/7e12b296-9405-4adf-8cb7-e4325e8db986)
 
 ### Book Listing
-![Book Listing](![image](https://github.com/user-attachments/assets/b7d9418d-6fcb-4fe9-a032-8a8beac64370)
-)
+![image](https://github.com/user-attachments/assets/b7d9418d-6fcb-4fe9-a032-8a8beac64370)
 
 ### Swap Request
-![Swap Request](![image](https://github.com/user-attachments/assets/bd416e5c-fa64-4a75-ad83-30df717e101d)
-)
-)
+![image](https://github.com/user-attachments/assets/bd416e5c-fa64-4a75-ad83-30df717e101d)
 
 ## Installation
 
