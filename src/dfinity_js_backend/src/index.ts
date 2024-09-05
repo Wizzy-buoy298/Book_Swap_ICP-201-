@@ -17,7 +17,6 @@ import {
   Principal,
   Opt,
   nat64,
-  Duration,
   Result,
   bool,
   Canister,
@@ -66,7 +65,7 @@ const Feedback = Record({
   createdAt: text,
 });
 
-// Message
+// Message variant for success and error messages
 const Message = Variant({
   Success: text,
   Error: text,
@@ -74,14 +73,13 @@ const Message = Variant({
   InvalidPayload: text,
 });
 
-// User Payload
+// Define all Payload Records for structured input
 const UserPayload = Record({
   name: text,
   email: text,
   phoneNumber: text,
 });
 
-// Book Payload
 const BookPayload = Record({
   userId: text,
   title: text,
@@ -91,14 +89,12 @@ const BookPayload = Record({
   imageUrl: text,
 });
 
-// Swap Request Payload
 const SwapRequestPayload = Record({
   ownerId: text,
   requesterId: text,
   bookId: text,
 });
 
-// Feedback Payload
 const FeedbackPayload = Record({
   userId: text,
   swapRequestId: text,
@@ -106,63 +102,61 @@ const FeedbackPayload = Record({
   comment: text,
 });
 
-// Initialize stable maps for storing garden data
+// Initialize storage maps
 const usersStorage = StableBTreeMap(0, text, User);
 const booksStorage = StableBTreeMap(1, text, Book);
 const swapRequestsStorage = StableBTreeMap(2, text, SwapRequest);
 const feedbackStorage = StableBTreeMap(3, text, Feedback);
 
-// Canister Definition
+
+// Helper function for validating emails
+function isValidEmail(email: string): bool {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Helper function for validating phone numbers
+function isValidPhoneNumber(phoneNumber: string): bool {
+  const phoneNumberRegex = /^\d{10}$/;
+  return phoneNumberRegex.test(phoneNumber);
+}
+
+// Improved Canister definition with additional validation and error handling
 export default Canister({
-  // Create a new user
+  // Create a new user profile with enhanced validation
   createUserProfile: update([UserPayload], Result(User, Message), (payload) => {
-    // Validate the payload
+    // Validate payload fields
     if (!payload.name || !payload.email || !payload.phoneNumber) {
-      return Err({
-        InvalidPayload:
-          "Ensure 'name', 'email', and 'phoneNumber' are provided.",
-      });
+      return Err({ InvalidPayload: "All fields (name, email, phone number) are required." });
     }
 
-    // Check for valid email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(payload.email)) {
-      return Err({
-        InvalidPayload:
-          "Invalid email format: Ensure the email is in the correct format.",
-      });
+    if (!isValidEmail(payload.email)) {
+      return Err({ InvalidPayload: "Invalid email format." });
     }
 
-    // Ensure the email for each user is unique
+    if (!isValidPhoneNumber(payload.phoneNumber)) {
+      return Err({ InvalidPayload: "Phone number must be a 10-digit number." });
+    }
+
+    // Ensure email is unique
     const users = usersStorage.values();
     for (const user of users) {
       if (user.email === payload.email) {
-        return Err({
-          InvalidPayload: "Email already exists: Ensure the email is unique.",
-        });
+        return Err({ InvalidPayload: "Email already exists." });
       }
     }
 
-    // Validate the phoneNumber
-    const phoneNumberRegex = /^\d{10}$/;
-    if (!phoneNumberRegex.test(payload.phoneNumber)) {
-      return Err({
-        InvalidPayload:
-          "Invalid phone number: Ensure the phone number is in the correct format.",
-      });
-    }
-
-    // Create the user after validation
+    // Create and store the new user
     const userId = uuidv4();
-    const user = {
+    const newUser = {
       ...payload,
       userId,
       owner: ic.caller(),
       createdAt: new Date().toISOString(),
     };
 
-    usersStorage.insert(userId, user);
-    return Ok(user);
+    usersStorage.insert(userId, newUser);
+    return Ok(newUser);
   }),
 
   // Function to update a specific UserProfile
@@ -473,49 +467,50 @@ export default Canister({
   ),
 
   // Update a swap request
-  updateSwapRequest: update(
-    [SwapRequestPayload],
-    Result(SwapRequest, Message),
-    (payload) => {
-      // Validate the payload
-      if (!payload.ownerId || !payload.requesterId || !payload.bookId) {
-        return Err({
-          InvalidPayload:
-            "Ensure 'ownerId', 'requesterId', and 'bookId' are provided.",
-        });
-      }
-
-      // Update the swap request after validation
-      const swapRequestId = ic.caller().toText();
-      const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
-      if ("None" in swapRequestOpt) {
-        return Err({ NotFound: "Swap request not found" });
-      }
-
-      const swapRequest = swapRequestOpt["Some"];
-      const updatedSwapRequest = {
-        ...swapRequest,
-        ...payload,
-      };
-
-      swapRequestsStorage.insert(swapRequestId, updatedSwapRequest);
-      return Ok(updatedSwapRequest);
+  updateSwapRequest: update([text, SwapRequestPayload], Result(SwapRequest, Message), (swapRequestId, payload) => {
+    const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
+    if ("None" in swapRequestOpt) {
+      return Err({ NotFound: "Swap request not found." });
     }
-  ),
+
+    const updatedSwapRequest = {
+      ...swapRequestOpt["Some"],
+      ...payload,
+    };
+
+    swapRequestsStorage.insert(swapRequestId, updatedSwapRequest);
+    return Ok(updatedSwapRequest);
+  }),
 
   // Get swap request by swapRequestId
-  getSwapRequest: query(
-    [text],
-    Result(SwapRequest, Message),
-    (swapRequestId) => {
-      const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
-      if ("None" in swapRequestOpt) {
-        return Err({ NotFound: "Swap request not found" });
-      }
-
-      return Ok(swapRequestOpt["Some"]);
+  getSwapRequest: query([text], Result(SwapRequest, Message), (swapRequestId) => {
+    const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
+    if ("None" in swapRequestOpt) {
+      return Err({ NotFound: "Swap request not found." });
     }
-  ),
+
+    return Ok(swapRequestOpt["Some"]);
+  }),
+
+  // New Feature: Get number of swaps per user
+  getSwapsByUser: query([text], Result(nat64, Message), (userId) => {
+    const swapCount = swapRequestsStorage.values().filter(swap => {
+      return swap.ownerId === userId || swap.requesterId === userId;
+    }).length;
+
+    return Ok(BigInt(swapCount));
+  }),
+
+
+  // Get swap request by swapRequestId
+  getSwapRequest: query([text], Result(SwapRequest, Message), (swapRequestId) => {
+    const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
+    if ("None" in swapRequestOpt) {
+      return Err({ NotFound: "Swap request not found." });
+    }
+
+    return Ok(swapRequestOpt["Some"]);
+  }),
 
   // Get swap requests by userId
   getSwapRequestsByUser: query(
@@ -616,28 +611,102 @@ export default Canister({
     return Ok(swapRequests);
   }),
 
-  // Function for a user to accept a swap request
-  acceptSwapRequest: update(
-    [text],
-    Result(SwapRequest, Message),
-    (swapRequestId) => {
-      // Validate the swapRequestId
-      const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
-      if ("None" in swapRequestOpt) {
-        return Err({ NotFound: "Swap request not found" });
-      }
+  // New Feature: Retrieve recently listed books
+  getRecentBooks: query([], Result(Vec(Book), Message), () => {
+    const recentBooks = booksStorage.values()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10); // Get the 10 most recently listed books
 
-      // Update the swap request after validation
-      const swapRequest = swapRequestOpt["Some"];
-      const updatedSwapRequest = {
-        ...swapRequest,
-        status: "Completed",
-      };
-
-      swapRequestsStorage.insert(swapRequestId, updatedSwapRequest);
-      return Ok(updatedSwapRequest);
+    if (recentBooks.length === 0) {
+      return Err({ NotFound: "No recent books found." });
     }
-  ),
+
+    return Ok(recentBooks);
+  }),
+
+  // New Feature: Get number of swaps per user
+  getSwapsByUser: query([text], Result(nat64, Message), (userId) => {
+    const swapCount = swapRequestsStorage.values().filter(swap => {
+      return swap.ownerId === userId || swap.requesterId === userId;
+    }).length;
+
+    return Ok(BigInt(swapCount));
+  }),
+
+  // New Feature: Retrieve feedbacks by userId
+  getFeedbacksByUser: query([text], Result(Vec(Feedback), Message), (userId) => {
+    const feedbacks = feedbackStorage.values().filter((feedback) => feedback.userId === userId);
+
+    if (feedbacks.length === 0) {
+      return Err({ NotFound: "No feedbacks found for the user." });
+    }
+
+    return Ok(feedbacks);
+  }),
+
+  // Function to get top 5 swappers of the month
+  getTopSwappers: query([], Result(Vec(Record({
+    userId: text,
+    name: text,
+    swapsCompleted: nat64,
+    lastBookDetails: Opt(Book)
+  })), Message), () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const completedSwaps = swapRequestsStorage.values().filter((swap) => {
+      const swapDate = new Date(swap.createdAt);
+      return swap.status === 'Completed' && swapDate.getMonth() === currentMonth && swapDate.getFullYear() === currentYear;
+    });
+    
+    const swapCountMap = new Map<string, { count: number, lastBook: Opt(Book) }>();
+    
+    completedSwaps.forEach((swap) => {
+      const userId = swap.ownerId;
+      const userBooks = booksStorage.values().filter(book => book.userId === userId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const lastBook = userBooks.length ? Some(userBooks[0]) : None;
+      
+      const currentCount = swapCountMap.get(userId)?.count || 0;
+      swapCountMap.set(userId, { count: currentCount + 1, lastBook });
+    });
+    
+    const topSwappers = Array.from(swapCountMap.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 5).map(([userId, data]) => {
+      const userOpt = usersStorage.get(userId);
+      if ("Some" in userOpt) {
+        const user = userOpt.Some;
+        return {
+          userId,
+          name: user.name,
+          swapsCompleted: BigInt(data.count),
+          lastBookDetails: data.lastBook
+        };
+      }
+    }).filter(user => user !== undefined);
+
+    if (topSwappers.length === 0) {
+      return Err({ NotFound: "No top swappers found this month." });
+    }
+
+    return Ok(topSwappers);
+  }),
+
+  /// Accept a swap request
+  acceptSwapRequest: update([text], Result(SwapRequest, Message), (swapRequestId) => {
+    const swapRequestOpt = swapRequestsStorage.get(swapRequestId);
+    if ("None" in swapRequestOpt) {
+      return Err({ NotFound: "Swap request not found." });
+    }
+
+    const swapRequest = swapRequestOpt["Some"];
+    const updatedSwapRequest = {
+      ...swapRequest,
+      status: "Completed",
+    };
+
+    swapRequestsStorage.insert(swapRequestId, updatedSwapRequest);
+    return Ok(updatedSwapRequest);
+  }),
+
 
   // Function for a user to reject a swap request
   rejectSwapRequest: update(
@@ -671,42 +740,32 @@ export default Canister({
     return Ok(BigInt(swapRequests.length) as nat64);
   }),
 
-  // Create a new feedback
-  createFeedback: update(
-    [FeedbackPayload],
-    Result(Feedback, Message),
-    (payload) => {
-      // Validate the payload
-      if (!payload.rating || !payload.comment) {
-        return Err({
-          InvalidPayload: "Ensure 'rating' and 'comment' are provided.",
-        });
-      }
-
-      // Validate the userId
-      const userOpt = usersStorage.get(payload.userId);
-      if ("None" in userOpt) {
-        return Err({ NotFound: "User not found" });
-      }
-
-      // Validate the swapRequestId
-      const swapRequestOpt = swapRequestsStorage.get(payload.swapRequestId);
-      if ("None" in swapRequestOpt) {
-        return Err({ NotFound: "Swap request not found" });
-      }
-
-      // Create the feedback after validation
-      const feedbackId = uuidv4();
-      const feedback = {
-        ...payload,
-        feedbackId,
-        createdAt: new Date().toISOString(),
-      };
-
-      feedbackStorage.insert(feedbackId, feedback);
-      return Ok(feedback);
+  // Create feedback
+  createFeedback: update([FeedbackPayload], Result(Feedback, Message), (payload) => {
+    if (!payload.rating || !payload.comment) {
+      return Err({ InvalidPayload: "Ensure 'rating' and 'comment' are provided." });
     }
-  ),
+
+    const userOpt = usersStorage.get(payload.userId);
+    if ("None" in userOpt) {
+      return Err({ NotFound: "User not found." });
+    }
+
+    const swapRequestOpt = swapRequestsStorage.get(payload.swapRequestId);
+    if ("None" in swapRequestOpt) {
+      return Err({ NotFound: "Swap request not found." });
+    }
+
+    const feedbackId = uuidv4();
+    const feedback = {
+      ...payload,
+      feedbackId,
+      createdAt: new Date().toISOString(),
+    };
+
+    feedbackStorage.insert(feedbackId, feedback);
+    return Ok(feedback);
+  }),
 
   // Update a feedback
   updateFeedback: update(
@@ -797,11 +856,11 @@ export default Canister({
     return Ok(null);
   }),
 
-  // Delete a book
+  // Delete a book by bookId
   deleteBook: update([text], Result(Null, Message), (bookId) => {
     const bookOpt = booksStorage.get(bookId);
     if ("None" in bookOpt) {
-      return Err({ NotFound: "Book not found" });
+      return Err({ NotFound: "Book not found." });
     }
 
     booksStorage.remove(bookId);
