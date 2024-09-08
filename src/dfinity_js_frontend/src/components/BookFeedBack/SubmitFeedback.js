@@ -4,7 +4,7 @@ import { createFeedback } from "../../utils/BookSwap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const AddFeedback = ({ show, handleClose, book, user, swapRequestId }) => {
+const AddFeedback = ({ show, handleClose, book, user, swapRequestId, fetchFeedbacks }) => {
   const [rating, setRating] = useState("");
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,6 +25,11 @@ const AddFeedback = ({ show, handleClose, book, user, swapRequestId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if(!swapRequestId){
+      toast.error("You must first create a swap request for this book before you can leave a feedback.")
+      return;
+    }
+
     if (!isFormValid()) {
       toast.error("Please provide a rating and comment.");
       return;
@@ -32,6 +37,12 @@ const AddFeedback = ({ show, handleClose, book, user, swapRequestId }) => {
 
     setLoading(true);
     try {
+      console.log({
+        userId: user.userId,
+        swapRequestId,
+        rating: parseInt(rating, 10),
+        comment,
+      })
       const response = await createFeedback({
         userId: user.userId,
         swapRequestId,
@@ -42,6 +53,7 @@ const AddFeedback = ({ show, handleClose, book, user, swapRequestId }) => {
       if (response.Ok) {
         toast.success("Feedback submitted successfully");
         if (isMounted.current) {
+          fetchFeedbacks()
           handleClose();
         }
       } else if (response.Err) {

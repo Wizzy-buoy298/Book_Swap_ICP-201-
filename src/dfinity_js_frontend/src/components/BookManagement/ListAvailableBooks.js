@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Card,
   Button,
@@ -42,97 +42,112 @@ const BookList = ({ user }) => {
   const [searchMessage, setSearchMessage] = useState("");
   const [activeTab, setActiveTab] = useState("books"); // New state to manage active tab
   const isotope = useRef(null);
-
+  window.user = user;
   // State for managing swap request modal
   const [selectedSwapRequest, setSelectedSwapRequest] = useState(null);
   const [showManageSwapModal, setShowManageSwapModal] = useState(false);
 
+
+  const fetchBooks = useCallback(async () => {
+    try {
+      const response = await getAllBooks();
+      console.log("Response:", response);
+      if (response.Ok) {
+        setBooks(response.Ok);
+        setSearchMessage(""); // Clear any previous search message
+      } else {
+        console.error("Error fetching books:", response.Error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  })
+
   // Fetch books from the backend
   useEffect(() => {
-    async function fetchBooks() {
-      try {
-        const response = await getAllBooks();
-        console.log("Response:", response);
-        if (response.Ok) {
-          setBooks(response.Ok);
-          setSearchMessage(""); // Clear any previous search message
-        } else {
-          console.error("Error fetching books:", response.Error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    }
-
     fetchBooks();
   }, []);
 
-  // Fetch swap requests from the backend
-  useEffect(() => {
-    async function fetchSwapRequests() {
-      try {
-        const response = await getAllSwapRequests();
-        console.log("Swap Requests Response:", response);
-        if (response.Ok) {
-          setSwapRequests(response.Ok);
-        } else {
-          console.error("Error fetching swap requests:", response.Error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
+  const fetchUserSwapRequests = useCallback(async () => {
+    try {
+      const response = await getSwapRequestsForUser(user.userId);
+      console.log("User Swap Requests Response:", response);
+      if (response.Ok) {
+        setUserSwapRequests(response.Ok);
+      } else {
+        console.error("Error fetching user swap requests:", response.Error);
       }
+    } catch (error) {
+      console.error("Error:", error);
     }
+  })
 
-    fetchSwapRequests();
-  }, []);
 
-  // Fetch swap requests for a specific user
+  // Fetch user swap requests from the backend
   useEffect(() => {
-    async function fetchUserSwapRequests() {
-      try {
-        const response = await getSwapRequestsForUser(user.userId);
-        console.log("User Swap Requests Response:", response);
-        if (response.Ok) {
-          setUserSwapRequests(response.Ok);
-        } else {
-          console.error("Error fetching user swap requests:", response.Error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    }
-
     fetchUserSwapRequests();
   }, [user]);
 
+
+  const fetchSwapRequests = useCallback(async () => {
+    try {
+      const response = await getAllSwapRequests();
+      console.log("Swap Requests Response:", response);
+      if (response.Ok) {
+        setSwapRequests(response.Ok);
+      } else {
+        console.error("Error fetching swap requests:", response.Error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  })
+  // Fetch swap requests from the backend
+  useEffect(() => {
+    fetchSwapRequests();
+  }, []);
+  const fetchFeedbacks = useCallback(async () => {
+    try {
+      const response = await getAllFeedbacks();
+      console.log("Feedbacks Response:", response);
+      if (response.Ok) {
+        setFeedbacks(response.Ok);
+      } else {
+        console.error("Error fetching feedbacks:", response.Error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  })
+
   // Fetch feedbacks from the backend
   useEffect(() => {
-    async function fetchFeedbacks() {
-      try {
-        const response = await getAllFeedbacks();
-        console.log("Feedbacks Response:", response);
-        if (response.Ok) {
-          setFeedbacks(response.Ok);
-        } else {
-          console.error("Error fetching feedbacks:", response.Error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    }
 
     fetchFeedbacks();
   }, []);
-
-  // Initialize Isotope and filter items
   useEffect(() => {
-    isotope.current = new Isotope(".books-grid", {
-      itemSelector: ".book-item",
-      layoutMode: "fitRows",
-    });
-
-    return () => isotope.current.destroy(); // Cleanup on unmount
-  }, [books]);
+    if (activeTab === "books") {
+      // Delay Isotope initialization slightly to ensure layout is stable
+      setTimeout(() => {
+        if (isotope.current) {
+          isotope.current.reloadItems();
+          isotope.current.arrange();
+        } else {
+          isotope.current = new Isotope(".books-grid", {
+            itemSelector: ".book-item",
+            layoutMode: "fitRows",
+          });
+        }
+      }, 100); // Small delay to allow DOM changes to finish
+    }
+  
+    return () => {
+      if (isotope.current) {
+        isotope.current.destroy();
+        isotope.current = null;
+      }
+    };
+  }, [activeTab, books]);
 
   const handleFilter = (genre) => {
     isotope.current.arrange({
@@ -166,7 +181,7 @@ const BookList = ({ user }) => {
 
   // Function to find the swapRequestId for the selected book
   const getSwapRequestId = (bookId) => {
-    const request = swapRequests.find((request) => request.bookId === bookId);
+    const request = swapRequests.find((request) => request.bookId.toString() === bookId.toString());
     return request ? request.swapRequestId : null;
   };
 
@@ -177,22 +192,16 @@ const BookList = ({ user }) => {
 
   // Handle search functionality
   const handleSearch = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await searchBooks(searchTerm);
-      console.log("Search Response:", response);
-      if (response.Ok) {
-        setBooks(response.Ok);
-        setSearchMessage(""); // Clear any previous search message
-      } else if (response.Err) {
-        console.error("Error searching books:", response.Err);
-        setBooks([]); // Clear the books list if no results were found
-        setSearchMessage(response.Err.NotFound || "No results found.");
-      }
-    } catch (error) {
-      console.error("Error:", error.message || "An unexpected error occurred.");
-      setSearchMessage("An unexpected error occurred. Please try again later.");
+    e.preventDefault()
+    let filterByTitleOrAuthor = function( itemElem ) {
+      let title = itemElem.querySelector('.book-title').textContent;
+      let author = itemElem.querySelector('.book-author').textContent;
+      console.log(title + "  " + author)
+      return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      author.toLowerCase().includes(searchTerm.toLowerCase())
     }
+    setSearchTerm("")
+    isotope.current.arrange({filter: filterByTitleOrAuthor})
   };
 
   const handleManageSwap = (request) => {
@@ -203,17 +212,14 @@ const BookList = ({ user }) => {
     setAcceptLoading(true);
     if (selectedSwapRequest) {
       try {
+        if(selectedSwapRequest.status === "Completed"){
+          toast.warning("Swap is already completed")
+          return;
+        }
         const response = await acceptSwapRequest(
           selectedSwapRequest.swapRequestId
         );
         if (response.Ok) {
-          setSwapRequests((prevRequests) =>
-            prevRequests.map((req) =>
-              req.id === selectedSwapRequest.id
-                ? { ...req, status: "Accepted" }
-                : req
-            )
-          );
           setShowManageSwapModal(false);
           toast.success("Swap request accepted successfully!", {
             position: "top-right",
@@ -224,6 +230,8 @@ const BookList = ({ user }) => {
             draggable: true,
             progress: undefined,
           });
+          fetchSwapRequests();
+          fetchUserSwapRequests();
         } else {
           console.error("Error accepting swap request:", response.Error);
           toast.error("Failed to accept swap request. Please try again.", {
@@ -260,17 +268,14 @@ const BookList = ({ user }) => {
     setRejectLoading(true);
     if (selectedSwapRequest) {
       try {
+        if(selectedSwapRequest.status === "Rejected"){
+          toast.warning("Swap is already completed")
+          return;
+        }
         const response = await rejectSwapRequest(
           selectedSwapRequest.swapRequestId
         );
         if (response.Ok) {
-          setSwapRequests((prevRequests) =>
-            prevRequests.map((req) =>
-              req.id === selectedSwapRequest.id
-                ? { ...req, status: "Rejected" }
-                : req
-            )
-          );
           setShowManageSwapModal(false);
           toast.success("Swap request rejected successfully!", {
             position: "top-right",
@@ -281,6 +286,8 @@ const BookList = ({ user }) => {
             draggable: true,
             progress: undefined,
           });
+          fetchSwapRequests();
+          fetchUserSwapRequests()
         } else {
           console.error("Error rejecting swap request:", response.Error);
           toast.error("Failed to reject swap request. Please try again.", {
@@ -334,8 +341,8 @@ const BookList = ({ user }) => {
                   fluid
                 />
                 <Card.Body className="d-flex flex-column">
-                  <Card.Title className="mb-2">{book.title}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">
+                  <Card.Title className="mb-2 book-title">{book.title}</Card.Title>
+                  <Card.Subtitle className="mb-2 text-muted book-author">
                     {book.author}
                   </Card.Subtitle>
                   <Card.Text className="mb-2">
@@ -555,6 +562,7 @@ const BookList = ({ user }) => {
           swapRequestId={getSwapRequestId(selectedBook.bookId)}
           show={showFeedbackModal}
           handleClose={handleCloseModal}
+          fetchFeedbacks={fetchFeedbacks}
         />
       )}
 

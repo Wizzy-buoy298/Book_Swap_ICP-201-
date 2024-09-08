@@ -43,6 +43,7 @@ const CreateSwapRequest = ({ book, user, show, handleClose }) => {
         } else {
           toast.success("Swap request created successfully");
           handleClose();
+          window.location.reload()
         }
       }
     } catch (error) {
