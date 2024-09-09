@@ -13,12 +13,30 @@ export async function updateUserProfile(userId, profile) {
 
 // getUserProfile
 export async function getUserProfile() {
-  return window.canister.farmWorkChain.getUserProfile();
+  try {
+    return await window.canister.farmWorkChain.getUserProfile();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getUserProfileByOwner
 export async function getUserProfileByOwner(owner) {
-  return window.canister.farmWorkChain.getUserProfileByOwner();
+  try {
+    return await window.canister.farmWorkChain.getUserProfileByOwner();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // listBook
@@ -33,12 +51,30 @@ export async function updateBook(book) {
 
 // getBook
 export async function getBook(id) {
-  return window.canister.farmWorkChain.getBook(id);
+  try {
+    return await window.canister.farmWorkChain.getBook(id);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getAllBooks
 export async function getAllBooks() {
-  return window.canister.farmWorkChain.getAllBooks();
+  try {
+    return await window.canister.farmWorkChain.getAllBooks();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // searchBooks
@@ -48,12 +84,30 @@ export async function searchBooks(search) {
 
 // getNumberOfBooks
 export async function getNumberOfBooks(userId) {
-  return window.canister.farmWorkChain.getNumberOfBooks(userId);
+  try {
+    return await window.canister.farmWorkChain.getNumberOfBooks(userId);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getBooksByUser
 export async function getBooksByUser(owner) {
-  return window.canister.farmWorkChain.getBooksByUser(owner);
+  try {
+    return await window.canister.farmWorkChain.getBooksByUser(owner);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getBooksByGenre
@@ -73,32 +127,88 @@ export async function updateSwapRequest(request) {
 
 // getSwapRequest
 export async function getSwapRequest(id) {
-  return window.canister.farmWorkChain.getSwapRequest(id);
+  try {
+    return await window.canister.farmWorkChain.getSwapRequest(id);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getSwapRequestsByUser
 export async function getSwapRequestsByUser(owner) {
-  return window.canister.farmWorkChain.getSwapRequestsByUser(owner);
+  try {
+    return await window.canister.farmWorkChain.getSwapRequestsByUser(owner);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getNumberOfCompletedSwapRequests
 export async function getNumberOfCompletedSwapRequests(userId) {
-  return window.canister.farmWorkChain.getNumberOfCompletedSwapRequests(userId);
+  try {
+    return await window.canister.farmWorkChain.getNumberOfCompletedSwapRequests(userId);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
+
 }
 
 // getNumberOfPendingSwapRequests
 export async function getNumberOfPendingSwapRequests(userId) {
-  return window.canister.farmWorkChain.getNumberOfPendingSwapRequests(userId);
+  try {
+    return await window.canister.farmWorkChain.getNumberOfPendingSwapRequests(userId);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
+
 }
 
 // getAllSwapRequests
 export async function getAllSwapRequests() {
-  return window.canister.farmWorkChain.getAllSwapRequests();
+  try {
+    return await window.canister.farmWorkChain.getAllSwapRequests();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getSwapRequestsForUser
 export async function getSwapRequestsForUser(userId) {
-  return window.canister.farmWorkChain.getSwapRequestsForUser(userId);
+  try {
+    return await window.canister.farmWorkChain.getSwapRequestsForUser(userId);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // acceptSwapRequest
@@ -123,22 +233,57 @@ export async function updateFeedback(feedback) {
 
 // getFeedback
 export async function getFeedback(id) {
-  return window.canister.farmWorkChain.getFeedback(id);
+  try {
+    return await window.canister.farmWorkChain.getFeedback(id);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getFeedbacksByUser
 export async function getFeedbacksByUser(owner) {
-  return window.canister.farmWorkChain.getFeedbacksByUser(owner);
+  try {
+    return await window.canister.farmWorkChain.getFeedbacksByUser(owner);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getAllFeedbacks
 export async function getAllFeedbacks() {
-  return window.canister.farmWorkChain.getAllFeedbacks();
+  try {
+    return await window.canister.farmWorkChain.getAllFeedbacks();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getFeedbacksBySwapRequest
 export async function getFeedbacksBySwapRequest(requestId) {
-  return window.canister.farmWorkChain.getFeedbacksBySwapRequest(requestId);
+  try {
+    return await window.canister.farmWorkChain.getFeedbacksBySwapRequest(requestId);
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
 }
 
 // deleteFeedback
@@ -158,20 +303,55 @@ export async function deleteSwapRequest(id) {
 
 // getTotalBooks
 export async function getTotalBooks() {
-  return window.canister.farmWorkChain.getTotalBooks();
+  try {
+    return await window.canister.farmWorkChain.getTotalBooks();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getTotalCompletedSwapRequests
 export async function getTotalCompletedSwapRequests() {
-  return window.canister.farmWorkChain.getTotalCompletedSwapRequests();
+  try {
+    return await window.canister.farmWorkChain.getTotalCompletedSwapRequests();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getTotalUsers
 export async function getTotalUsers() {
-  return window.canister.farmWorkChain.getTotalUsers();
+  try {
+    return await window.canister.farmWorkChain.getTotalUsers();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
+
 }
 
 // getFeaturedSwappers
 export async function getFeaturedSwappers() {
-  return window.canister.farmWorkChain.getFeaturedSwappers();
+  try {
+    return await window.canister.farmWorkChain.getFeaturedSwappers();
+  } catch (error) {
+    if (error.name === "AgentHTTPResponseError") {
+      const authClient = window.auth.client;
+      await authClient.logout();
+    }
+    return [];
+  }
 }
