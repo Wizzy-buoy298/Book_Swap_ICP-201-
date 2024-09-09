@@ -18,6 +18,7 @@ import UpdateUserProfileModal from "../UserManager/UpdateProfile";
 import AddBook from "../../components/BookManagement/ListBook";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { logout } from "../../utils/auth";
 
 const Dashboard = ({ user }) => {
   const { userId, name, email, phoneNumber, createdAt } = user;
@@ -62,6 +63,7 @@ const Dashboard = ({ user }) => {
       // Check if the response has an `ok` property or if it's structured differently
       if (response.Ok) {
         toast.success("Book listed successfully.");
+        window.location.reload();
       } else if (response.Err) {
         console.error("Error listing book:", response.Err);
         toast.error(`Error listing book: ${response.Err}`);
@@ -241,19 +243,30 @@ const Dashboard = ({ user }) => {
               style={{ width: "100%", textAlign: "center" }}
             >
               <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
-                {name}
+                {userProfile.name}
               </div>
               <div style={{ fontSize: "1rem", marginTop: "10px" }}>
                 <div>
-                  <strong>Email:</strong> {email}
+                  <strong>Email:</strong> {userProfile.email}
                 </div>
                 <div>
-                  <strong>Phone:</strong> {phoneNumber}
+                  <strong>Phone:</strong> {userProfile.phoneNumber}
                 </div>
                 <div>
                   <strong>Member Since:</strong> {formatDateTime(createdAt)}
                 </div>
               </div>
+              <Button
+              variant="danger"
+              size="sm"
+              style={{ marginTop: "10px", marginRight: "10px" }}
+              onClick={async() => {
+                await logout();
+                window.location.replace("/")
+              }}
+            >
+              Disconnect Wallet
+            </Button>
               <Button
                 variant="outline-light"
                 size="sm"
@@ -266,7 +279,7 @@ const Dashboard = ({ user }) => {
           </Col>
         </Row>
       </Card>
-
+      
       {/* User Profile Modal */}
       <UpdateUserProfileModal
         show={activeModal === "profile"}

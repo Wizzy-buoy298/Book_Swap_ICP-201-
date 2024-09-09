@@ -18,7 +18,7 @@ export async function login() {
             identityProvider: IDENTITY_PROVIDER,
             onSuccess: async () => {
                 window.auth.isAuthenticated = await authClient.isAuthenticated();
-                window.location.reload();
+                window.location.replace("/")
             },
             maxTimeToLive: MAX_TTL,
         });

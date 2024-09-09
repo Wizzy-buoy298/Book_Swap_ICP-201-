@@ -45,18 +45,17 @@ To run this project locally, follow these steps:
     ```
 
 3. **Run the Canister:**
-    Start the canister:
-    ```bash
-    dfx start --background --clean
-    ```
-
     Deploy the canisters:
     ```bash
     ./deploy.sh
     ```
-
-4. **Access the Application:**
-    Once deployed, you can interact with the canisters through the frontend url or backend url.
+4. **Start Server**
+    Start the server:
+    ```bash
+    npm start
+    ```
+5. **Access the Application:**
+    Once deployed, you can interact with the canisters through `http://localhost:8080/`.
 
 ## Usage
 
