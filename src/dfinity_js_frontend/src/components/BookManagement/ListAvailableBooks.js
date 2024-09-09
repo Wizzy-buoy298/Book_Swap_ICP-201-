@@ -42,7 +42,6 @@ const BookList = ({ user }) => {
   const [searchMessage, setSearchMessage] = useState("");
   const [activeTab, setActiveTab] = useState("books"); // New state to manage active tab
   const isotope = useRef(null);
-  window.user = user;
   // State for managing swap request modal
   const [selectedSwapRequest, setSelectedSwapRequest] = useState(null);
   const [showManageSwapModal, setShowManageSwapModal] = useState(false);

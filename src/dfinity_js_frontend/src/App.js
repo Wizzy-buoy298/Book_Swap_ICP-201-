@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React from "react";
 import "./App.css";
 import "./styles/tailwind.css";
 import "./styles/font.css";
@@ -6,11 +6,9 @@ import "./index.css";
 
 // src/dfinity_js_frontend/src/index.css
 // import "./styles/font.css";
-import {BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import {BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import UserProfile from "./pages/Profile/Profile";
-import Login from "./pages/Profile/Login";
-import { login } from "./utils/auth";
 import NotFound from "./components/utils/NotFound";
 // import Profile from "./pages/Profile/UserDashboard";
 

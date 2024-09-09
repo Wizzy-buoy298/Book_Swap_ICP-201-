@@ -37,12 +37,6 @@ const AddFeedback = ({ show, handleClose, book, user, swapRequestId, fetchFeedba
 
     setLoading(true);
     try {
-      console.log({
-        userId: user.userId,
-        swapRequestId,
-        rating: parseInt(rating, 10),
-        comment,
-      })
       const response = await createFeedback({
         userId: user.userId,
         swapRequestId,
